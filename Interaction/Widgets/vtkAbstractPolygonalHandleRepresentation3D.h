@@ -38,6 +38,7 @@ class vtkCellPicker;
 class vtkTransformPolyDataFilter;
 class vtkMatrixToLinearTransform;
 class vtkMatrix4x4;
+class vtkTransform;
 class vtkPolyData;
 class vtkAbstractTransform;
 class vtkActor;
@@ -75,6 +76,7 @@ public:
   // Get the transform used to transform the generic handle polydata before
   // placing it in the render window
   virtual vtkAbstractTransform * GetTransform();
+  virtual void SetTransform(vtkTransform *);
 
   // Description:
   // Methods to make this class properly act like a vtkWidgetRepresentation.
@@ -145,6 +147,21 @@ public:
   vtkGetMacro( SmoothMotion, int );
   vtkBooleanMacro( SmoothMotion, int );
 
+  // Define an fixed axe to which the interaction is constrained
+  vtkSetMacro( ConstrainedAxis, int );
+  vtkGetMacro( ConstrainedAxis, int );
+
+  // The interaction mode of the widget
+  // -1: Undefined - no interaction mode forced
+  // 0: Translate
+  // 1: Scale
+  // 2: Rotation
+  vtkSetMacro( InteractionMode, int );
+  vtkGetMacro( InteractionMode, int );
+
+  vtkSetMacro( Transformation, vtkTransform* );
+  vtkGetMacro( Transformation, vtkTransform* );
+
 protected:
   vtkAbstractPolygonalHandleRepresentation3D();
   ~vtkAbstractPolygonalHandleRepresentation3D();
@@ -155,9 +172,12 @@ protected:
   vtkMatrixToLinearTransform * HandleTransform;
   vtkMatrix4x4               * HandleTransformMatrix;
   vtkCellPicker              * HandlePicker;
+  vtkTransform               * Transformation;
   double                       LastPickPosition[3];
   double                       LastEventPosition[2];
   int                          ConstraintAxis;
+  int                          ConstrainedAxis;
+  int                          InteractionMode;
   vtkProperty                * Property;
   vtkProperty                * SelectedProperty;
   int                          WaitingForMotion;
@@ -171,6 +191,7 @@ protected:
   virtual void Translate(double *p1, double *p2);
   virtual void Scale(double *p1, double *p2, double eventPos[2]);
   virtual void MoveFocus(double *p1, double *p2);
+  virtual void Rotate(double *p1, double *p2, double eventPos[2]);
 
   void CreateDefaultProperties();
 

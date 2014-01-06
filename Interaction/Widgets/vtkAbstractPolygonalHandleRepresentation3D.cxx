@@ -34,6 +34,7 @@
 #include "vtkMatrixToLinearTransform.h"
 #include "vtkMatrix4x4.h"
 #include "vtkVectorText.h"
+#include "vtkTransform.h"
 #include "vtkFollower.h"
 
 vtkCxxSetObjectMacro(vtkAbstractPolygonalHandleRepresentation3D,Property,vtkProperty);
@@ -71,6 +72,8 @@ vtkAbstractPolygonalHandleRepresentation3D
 
   this->Actor = NULL; // Created by subclass.vtkFollower::New();
 
+  this->Transformation = vtkTransform::New();
+
   // Manage the picking stuff
   this->HandlePicker = vtkCellPicker::New();
   this->HandlePicker->PickFromListOn();
@@ -80,6 +83,8 @@ vtkAbstractPolygonalHandleRepresentation3D
   this->PlaceFactor = 1.0;
   this->WaitingForMotion = 0;
   this->ConstraintAxis = -1;
+  this->ConstrainedAxis = -1;
+  this->InteractionMode = -1;
 
   vtkFocalPlanePointPlacer *pointPlacer = vtkFocalPlanePointPlacer::New();
   this->SetPointPlacer( pointPlacer );
@@ -313,65 +318,31 @@ void vtkAbstractPolygonalHandleRepresentation3D::WidgetInteraction(double eventP
           this->StartEventPosition[1], z, startPickPoint);
 
       this->ConstraintAxis = this->DetermineConstraintAxis(
-          this->ConstraintAxis,pickPoint, startPickPoint);
+          this->ConstraintAxis, pickPoint, startPickPoint);
 
-      if (    this->InteractionState == vtkHandleRepresentation::Selecting )
+      if ( this->InteractionState == vtkHandleRepresentation::Selecting )
         {
-        // If we are doing axis constrained motion, igonore the placer.
-        // Can't have both the placer and an axis constraint dictating
-        // handle placement.
-        if (this->ConstraintAxis >= 0 || this->Constrained || !this->PointPlacer)
-          {
-          this->MoveFocus( prevPickPoint, pickPoint );
-          }
-        else
-          {
-          double newCenterPointRequested[3]; // displayPosition
-          double newCenterPoint[3], worldOrient[9];
-
-          // Make a request for the new position.
-          this->MoveFocusRequest( prevPickPoint,
-                                  pickPoint,
-                                  eventPos,
-                                  newCenterPointRequested );
-
-          vtkFocalPlanePointPlacer * fPlacer
-            = vtkFocalPlanePointPlacer::SafeDownCast( this->PointPlacer );
-          if (fPlacer)
-            {
-            // Offset the placer plane to one that passes through the current
-            // world position and is parallel to the focal plane. Offset =
-            // the distance currentWorldPos is from the focal plane
-            //
-            double currentWorldPos[3], projDir[3], fp[3];
-            this->GetWorldPosition( currentWorldPos );
-            this->Renderer->GetActiveCamera()->GetFocalPoint(fp);
-            double vec[3] = { currentWorldPos[0] - fp[0],
-                              currentWorldPos[1] - fp[1],
-                              currentWorldPos[2] - fp[2]};
-            this->Renderer->GetActiveCamera()->GetDirectionOfProjection(projDir);
-            fPlacer->SetOffset( vtkMath::Dot( vec, projDir ) );
-            }
-
-
-          // See what the placer says.
-          if (this->PointPlacer->ComputeWorldPosition(
-                this->Renderer, newCenterPointRequested, newCenterPoint,
-                worldOrient ))
-            {
-            // Once the placer has validated us, update the handle position
-            this->SetWorldPosition( newCenterPoint );
-            }
-          }
-        }
-      else
-        {
-        // If we are doing axis constrained motion, igonore the placer.
+        // If we are doing axis constrained motion, ignore the placer.
         // Can't have both the placer and the axis constraint dictating
         // handle placement.
-        if (this->ConstraintAxis >= 0 || this->Constrained || !this->PointPlacer)
+        if (this->ConstraintAxis >= 0 || this->Constrained || !this->PointPlacer || this->ConstrainedAxis >= 0)
           {
-          this->Translate(prevPickPoint, pickPoint);
+          if (this->InteractionMode == 0) 
+            {
+            this->Translate(prevPickPoint, pickPoint);
+            }
+          else if (this->InteractionMode == 1)
+            {
+            this->Scale(prevPickPoint, pickPoint, eventPos);
+            }
+          else if (this->InteractionMode == 2)
+            {
+            this->Rotate(prevPickPoint, pickPoint, eventPos);
+            }
+          else
+            {
+            this->Translate(prevPickPoint, pickPoint);
+            }
           }
         else
           {
@@ -468,7 +439,11 @@ void vtkAbstractPolygonalHandleRepresentation3D::MoveFocus(double *p1, double *p
 
   double focus[3];
   this->GetWorldPosition( focus );
-  if ( this->ConstraintAxis >= 0 )
+  if ( this->ConstrainedAxis >= 0 )
+    {
+    focus[this->ConstrainedAxis] += v[this->ConstrainedAxis];  
+    }
+  else if ( this->ConstraintAxis >= 0 )
     {
     focus[this->ConstraintAxis] += v[this->ConstraintAxis];
     }
@@ -496,7 +471,17 @@ void vtkAbstractPolygonalHandleRepresentation3D::Translate(double *p1, double *p
   double newFocus[3];
   int i;
 
-  if ( this->ConstraintAxis >= 0 )
+  if ( this->ConstrainedAxis >= 0 )
+    {
+    for (i=0; i<3; i++)
+      {
+      if ( i != this->ConstrainedAxis )
+        {
+        v[i] = 0.0;
+        }
+      }
+    }
+  else if ( this->ConstraintAxis >= 0 )
     {//move along axis
     for (i=0; i<3; i++)
       {
@@ -539,6 +524,152 @@ void vtkAbstractPolygonalHandleRepresentation3D
   this->HandleTransformMatrix->SetElement(0, 0, handleSize);
   this->HandleTransformMatrix->SetElement(1, 1, handleSize);
   this->HandleTransformMatrix->SetElement(2, 2, handleSize);
+}
+
+void VectorAdd(const double* vec1, const double* vec2, double* out, int length)
+{
+  for (int i = 0; i < length; i++)
+    {
+    out[i] = vec1[i] + vec2[i];
+    }
+}
+
+void VectorMin(const double* vec1, const double* vec2, double* out, int length)
+{
+  for (int i = 0; i < length; i++)
+    {
+    out[i] = vec1[i] - vec2[i];
+    }
+}
+
+void VectorScalarMultiply(const double* vec1, const double scalar, double* out, int length)
+{
+  for (int i = 0; i < length; i++)
+    {
+    out[i] = vec1[i] * scalar;
+    }
+}
+
+void VectorProject(const double* vec1, const double* normal, double* out, int length)
+{
+  double aDotNTimesN[length];
+  double aDotN = vtkMath::Dot(vec1, normal);
+  VectorScalarMultiply(normal, aDotN, aDotNTimesN, length);
+  VectorMin(vec1, aDotNTimesN, out, length);
+}
+
+double VectorLength(const double* vec, int length)
+{
+  double vecLength = 0.0;
+  for (int i = 0; i < length; i++)
+    {
+    vecLength += vec[i] * vec[i];
+    }
+
+  if (vecLength < 0.0000000001)
+    {
+    return 0.0;
+    }
+  return sqrt(vecLength);
+}
+
+void VectorNormalize(const double* vec, double* out, int length)
+{
+  double vecLength = VectorLength(vec, length);  
+  if (vecLength == 0.0)
+    return;
+  for (int i = 0; i < length; i++)
+    out[i] = vec[i] / vecLength;
+}
+
+void VectorInit(double* vec, int length)
+{
+  for (int i = 0; i < length; i++) {
+    vec[i] = 0.0;
+  }
+}
+
+void vtkAbstractPolygonalHandleRepresentation3D::Rotate(double *p1, double *p2, double eventPos[2])
+{
+  // p1: prevPickPoint
+  // p2: pickPoint
+  double center[3];
+  this->GetWorldPosition( center );
+
+  // Convert world center position to screen coordinates
+  // Create two vectors from center screen coordinates to prev event position and current event position
+  // Then use zCross to see if the result points in- or outward.
+
+  double axis[4] = {0.0, 0.0, 0.0, 1.0};   // axis of rotation
+
+  // Define axe of rotation
+  if (this->ConstrainedAxis >= 0)
+    {
+    // Either by the constrained axe ...
+    axis[this->ConstrainedAxis] = 1.0;
+    this->HandleTransformMatrix->MultiplyPoint(axis, axis);
+    VectorMin(axis, center, axis, 4);
+    VectorNormalize(axis, axis, 4);
+    }
+  else
+    {
+    // ... or by the difference with the view plane normal
+    this->Renderer->GetActiveCamera()->GetViewPlaneNormal(axis);
+    }
+
+  // Vector1 and 2 are 'extended' vectors p1 and p2
+  // Assumption: p1 and p2 are in world coordinates!!!
+  double vector1[4];
+  double vector2[4];
+  VectorMin(p1, center, vector1, 3);
+  VectorMin(p2, center, vector2, 3);
+  vector1[3] = 1.0;
+  vector2[3] = 1.0;
+
+  // proj1 and 2 are projected vectors on the plane perpendicular to the transformed axis
+  double proj1[4];
+  double proj2[4];
+  VectorProject(vector1, axis, proj1, 4);
+  VectorProject(vector2, axis, proj2, 4);
+  VectorNormalize(proj1, proj1, 4);
+  VectorNormalize(proj2, proj2, 4);
+
+  // Take cross product and see if the resulting vector is in front or behind the plane perpendicular to
+  // the transformed rotation axis
+  double crossProd[4];
+  vtkMath::Cross(proj1, proj2, crossProd);
+
+  double distance = 0.0;  // TODO: calculate the distance properly
+  double residue = axis[0]*crossProd[0] + axis[1]*crossProd[1] + axis[2]*crossProd[2] + distance;
+
+  int *size = this->Renderer->GetSize();
+  int *lastEventPosition = this->Renderer->GetRenderWindow()->GetInteractor()->GetLastEventPosition();
+  double l2 = pow(eventPos[0]-lastEventPosition[0], 2) +
+    pow(eventPos[1]-lastEventPosition[1], 2);
+  double theta = 180.0 * sqrt(l2/(size[0]*size[0]+size[1]*size[1]));
+  if (residue < 0)
+    {
+    theta = -theta;
+    }
+
+  vtkTransform* transform = vtkTransform::New();
+  transform->Identity();
+  transform->Translate(center[0], center[1], center[2]);
+  transform->RotateWXYZ(theta, axis);
+  transform->Translate(-center[0], -center[1], -center[2]);
+
+  // Update the rotation matrix
+  this->Transformation->RotateWXYZ(theta, axis);
+
+  vtkMatrix4x4* handleTransformMatrix = vtkMatrix4x4::New();
+  handleTransformMatrix->DeepCopy(this->HandleTransformMatrix);
+
+  vtkMatrix4x4* result = vtkMatrix4x4::New();
+  vtkMatrix4x4::Multiply4x4(transform->GetMatrix(), handleTransformMatrix, result);
+
+  this->HandleTransformMatrix->DeepCopy(result);
+
+  transform->Delete();
 }
 
 //----------------------------------------------------------------------
@@ -745,6 +876,12 @@ double* vtkAbstractPolygonalHandleRepresentation3D::GetBounds()
 vtkAbstractTransform* vtkAbstractPolygonalHandleRepresentation3D::GetTransform()
 {
   return this->HandleTransform;
+}
+
+//-----------------------------------------------------------------------------
+void vtkAbstractPolygonalHandleRepresentation3D::SetTransform(vtkTransform* transform)
+{
+  this->HandleTransformMatrix->DeepCopy(transform->GetMatrix());
 }
 
 //----------------------------------------------------------------------
