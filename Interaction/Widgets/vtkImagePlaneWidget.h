@@ -444,6 +444,9 @@ public:
   vtkSetClampMacro(RightButtonAutoModifier,int, VTK_NO_MODIFIER, VTK_CONTROL_MODIFIER);
   vtkGetMacro(RightButtonAutoModifier, int);
 
+  // Berend Klein Haneveld:
+  void SetUserTransform(vtkTransform* transform);
+
 protected:
   vtkImagePlaneWidget();
   ~vtkImagePlaneWidget();

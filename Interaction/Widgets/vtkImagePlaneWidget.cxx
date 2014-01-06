@@ -3068,4 +3068,10 @@ void vtkImagePlaneWidget::Scale(double *p1, double *p2,
   this->PlaneSource->SetPoint2(point2);
 }
 
-
+void vtkImagePlaneWidget::SetUserTransform(vtkTransform* transform) {
+  // std::cout << "Transformed!" << std::endl;
+  this->PlaneOutlineActor->SetUserTransform(transform);
+  this->TexturePlaneActor->SetUserTransform(transform);
+  this->CursorActor->SetUserTransform(transform);
+  this->MarginActor->SetUserTransform(transform);
+}
