@@ -459,8 +459,8 @@ void vtkImagePlaneWidget::AddObservers(void)
                        this->EventCallbackCommand, this->Priority);
     i->AddObserver(vtkCommand::RightButtonReleaseEvent,
                        this->EventCallbackCommand, this->Priority);
-    i->AddObserver(vtkCommand::CharEvent,
-                       this->EventCallbackCommand, this->Priority);
+    // i->AddObserver(vtkCommand::CharEvent,
+                       // this->EventCallbackCommand, this->Priority);
     }
 }
 
