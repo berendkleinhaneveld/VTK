@@ -1,34 +1,38 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkOpenGLGPUVolumeRayCastMapper.h
-
+  Module:    vtkOpenGLGPUMultiVolumeRayCastMapper.h
+  
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
   See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
+
+  Modified by:  Carlos Falcón cfalcon@ctim.es 
+                Karl Krissian karl@ctim.es 
+                Berend Klein Haneveld b.a.kleinhaneveld@student.tudelft.nl
 
      This software is distributed WITHOUT ANY WARRANTY; without even
      the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkOpenGLGPUVolumeRayCastMapper - OpenGL subclass that draws the
+// .NAME vtkOpenGLGPUMultiVolumeRayCastMapper - OpenGL subclass that draws the
 // image to the screen
 // .SECTION Description
 // This is the concrete implementation of a ray cast image display helper -
 // a helper class responsible for drawing the image to the screen.
 
 // .SECTION see also
-// vtkGPUVolumeRayCastMapper
+// vtkGPUMultiVolumeRayCastMapper
 //
 // .SECTION Thanks
 // Thanks to Michael Granseier for helping to debug this class with respect
 // to maximum memory issues (which must be specified as vtkIdType and not int).
-#ifndef __vtkOpenGLGPUVolumeRayCastMapper_h
-#define __vtkOpenGLGPUVolumeRayCastMapper_h
+#ifndef __vtkOpenGLGPUMultiVolumeRayCastMapper_h
+#define __vtkOpenGLGPUMultiVolumeRayCastMapper_h
 
 #include "vtkRenderingVolumeOpenGLModule.h" // For export macro
-#include "vtkGPUVolumeRayCastMapper.h"
+#include "vtkGPUMultiVolumeRayCastMapper.h"
 
 class vtkVolume;
 class vtkRenderer;
@@ -54,19 +58,14 @@ class vtkStdString;
 class vtkShaderProgram2;
 class vtkShader2;
 
-typedef enum SHADER_TYPE {
-  SHADER_TYPE_DEFAULT=0,
-  SHADER_TYPE_MIP=1,
-  SHADER_TYPE_MIDA=2
-} SHADER_TYPE;
+class vtkTransform;
 
-
-class VTKRENDERINGVOLUMEOPENGL_EXPORT vtkOpenGLGPUVolumeRayCastMapper
-  : public vtkGPUVolumeRayCastMapper
+class VTKRENDERINGVOLUMEOPENGL_EXPORT vtkOpenGLGPUMultiVolumeRayCastMapper
+  : public vtkGPUMultiVolumeRayCastMapper
 {
 public:
-  static vtkOpenGLGPUVolumeRayCastMapper *New();
-  vtkTypeMacro(vtkOpenGLGPUVolumeRayCastMapper,vtkGPUVolumeRayCastMapper);
+  static vtkOpenGLGPUMultiVolumeRayCastMapper *New();
+  vtkTypeMacro(vtkOpenGLGPUMultiVolumeRayCastMapper,vtkGPUMultiVolumeRayCastMapper);
   virtual void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
@@ -94,34 +93,70 @@ public:
   static void PrintError(const char *headerMessage);
 
   // Description:
-  // Change from MIP to MIDA to default rendering
-  int ShaderType;
-  vtkSetMacro(ShaderType, int);
-  vtkGetMacro(ShaderType, int);
+  // Change from MIP to MIDA to Simple mix rendering
+  int BlendType;
+  vtkSetMacro(BlendType, int);
+  vtkGetMacro(BlendType, int);
 
-  float UpperBound;
-  vtkSetMacro(UpperBound, float);
-  vtkGetMacro(UpperBound, float);
+  // Description:
+  // Change shader type of fixed data set
+  int ShaderType1;
+  vtkSetMacro(ShaderType1, int);
+  vtkGetMacro(ShaderType1, int);
 
-  float LowerBound;
-  vtkSetMacro(LowerBound, float);
-  vtkGetMacro(LowerBound, float);
+  // Description:
+  // Change shader type of moving data set
+  int ShaderType2;
+  vtkSetMacro(ShaderType2, int);
+  vtkGetMacro(ShaderType2, int);
 
-  float Window;
-  vtkSetMacro(Window, float);
-  vtkGetMacro(Window, float);
+  float UpperBound1;
+  vtkSetMacro(UpperBound1, float);
+  vtkGetMacro(UpperBound1, float);
+
+  float LowerBound1;
+  vtkSetMacro(LowerBound1, float);
+  vtkGetMacro(LowerBound1, float);
+
+  float UpperBound2;
+  vtkSetMacro(UpperBound2, float);
+  vtkGetMacro(UpperBound2, float);
+
+  float LowerBound2;
+  vtkSetMacro(LowerBound2, float);
+  vtkGetMacro(LowerBound2, float);
+
+  float Window1;
+  vtkSetMacro(Window1, float);
+  vtkGetMacro(Window1, float);
   
-  float Level;
-  vtkSetMacro(Level, float);
-  vtkGetMacro(Level, float);
+  float Window2;
+  vtkSetMacro(Window2, float);
+  vtkGetMacro(Window2, float);
 
-  float Brightness;
-  vtkSetMacro(Brightness, float);
-  vtkGetMacro(Brightness, float);
+  float Level1;
+  vtkSetMacro(Level1, float);
+  vtkGetMacro(Level1, float);
 
+  float Level2;
+  vtkSetMacro(Level2, float);
+  vtkGetMacro(Level2, float);
+
+  // Description:
+  // Change brightness parameter of fixed data set
+  float Brightness1;
+  vtkSetMacro(Brightness1, float);
+  vtkGetMacro(Brightness1, float);
+
+  // Description:
+  // Change brightness parameter of fixed data set
+  float Brightness2;
+  vtkSetMacro(Brightness2, float);
+  vtkGetMacro(Brightness2, float);
+  
 protected:
-  vtkOpenGLGPUVolumeRayCastMapper();
-  ~vtkOpenGLGPUVolumeRayCastMapper();
+  vtkOpenGLGPUMultiVolumeRayCastMapper();
+  ~vtkOpenGLGPUMultiVolumeRayCastMapper();
 
   // The render method called by the superclass
   virtual void GPURender(vtkRenderer *ren,
@@ -178,7 +213,7 @@ protected:
   int AllocateFrameBuffers(vtkRenderer *ren);
 
   // Description
-  // Load the scalar field (one or four component scalar field), cell or point
+  // Load two scalar fields (one or four component scalar field), cell or point
   // based for a given subextent of the whole extent (can be the whole extent)
   // as a 3D texture on the GPU.
   // Extents are expressed in point if the cell flag is false or in cells of
@@ -199,7 +234,7 @@ protected:
   //                           textureExtent[2]<=textureExtent[3] &&
   //                           textureExtent[4]<=textureExtent[5])))
   int LoadScalarField(vtkImageData *input,
-                      vtkImageData *maskInput,
+                      vtkImageData *input2,
                       int textureExtent[6],
                       vtkVolume *volume);
 
@@ -472,13 +507,19 @@ protected:
   vtkMapMaskTextureId *MaskTextures; // need a list for AMR mode.
 
   vtkRGBTable *RGBTable;
+  vtkRGBTable *RGBTable2;
   vtkRGBTable *Mask1RGBTable;
   vtkRGBTable *Mask2RGBTable;
 
   vtkOpacityTables *OpacityTables;
-
+  vtkOpacityTables *OpacityTables2;
   vtkKWScalarField *CurrentScalar;
+  vtkKWScalarField *CurrentScalar2;
   vtkKWMask *CurrentMask;
+
+   // transformation that convert texture coordinates from the first 
+   // to the second input volume.
+  vtkTransform *TextureCoord_1to2;
 
   float ActualSampleDistance;
 
@@ -501,8 +542,8 @@ protected:
   vtkShaderProgram2 *ScaleBiasProgram;
 
 private:
-  vtkOpenGLGPUVolumeRayCastMapper(const vtkOpenGLGPUVolumeRayCastMapper&);  // Not implemented.
-  void operator=(const vtkOpenGLGPUVolumeRayCastMapper&);  // Not implemented.
+  vtkOpenGLGPUMultiVolumeRayCastMapper(const vtkOpenGLGPUMultiVolumeRayCastMapper&);  // Not implemented.
+  void operator=(const vtkOpenGLGPUMultiVolumeRayCastMapper&);  // Not implemented.
 };
 
 #endif

@@ -1,5 +1,6 @@
 set(Module_SRCS
   vtkOpenGLGPUVolumeRayCastMapper.cxx
+  vtkOpenGLGPUMultiVolumeRayCastMapper.cxx
   vtkOpenGLHAVSVolumeMapper.cxx
   vtkOpenGLProjectedAAHexahedraMapper.cxx
   vtkOpenGLProjectedTetrahedraMapper.cxx
@@ -9,6 +10,11 @@ set(Module_SRCS
   )
 
 set(shader_files
+  vtkGPUMultiVolumeRayCastMapper_CompositeFS.glsl
+  vtkGPUMultiVolumeRayCastMapper_FourComponentsFS.glsl
+  vtkGPUMultiVolumeRayCastMapper_NoShadeFS.glsl
+  vtkGPUMultiVolumeRayCastMapper_OneComponentFS.glsl
+  vtkGPUMultiVolumeRayCastMapper_ShadeFS.glsl
   vtkGPUVolumeRayCastMapper_AdditiveFS.glsl
   vtkGPUVolumeRayCastMapper_AdditiveCroppingFS.glsl
   vtkGPUVolumeRayCastMapper_AdditiveNoCroppingFS.glsl
@@ -39,6 +45,7 @@ set(shader_files
   vtkGPUVolumeRayCastMapper_FourComponentsFS.glsl
   vtkGPUVolumeRayCastMapper_NoShadeFS.glsl
   vtkGPUVolumeRayCastMapper_ShadeFS.glsl
+  vtkGPUVolumeRayCastMapper_SpecialCompositeFS.glsl
   vtkHAVSVolumeMapper_kbufferVP.asm
   vtkHAVSVolumeMapper_k2FP.asm
   vtkHAVSVolumeMapper_k2BeginFP.asm
@@ -75,7 +82,7 @@ foreach(file ${shader_files})
   set_source_files_properties(${file_we} WRAP_EXCLUDE)
 endforeach()
 
-# Nwo for the object factory.
+# Now for the object factory.
 set(opengl_overrides
   GPUVolumeRayCastMapper
   HAVSVolumeMapper
