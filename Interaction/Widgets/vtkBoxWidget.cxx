@@ -1329,31 +1329,58 @@ void vtkBoxWidget::SetTransform(vtkTransform* t)
   // position of the other handles.
   double *bounds=this->InitialBounds;
 
-  xIn[0] = bounds[0]; xIn[1] = bounds[2]; xIn[2] = bounds[4];
+  xIn[0] = bounds[0];
+  xIn[1] = bounds[2];
+  xIn[2] = bounds[4];
   t->InternalTransformPoint(xIn,pts);
 
-  xIn[0] = bounds[1]; xIn[1]= bounds[2]; xIn[2] = bounds[4];
+  xIn[0] = bounds[1];
+  xIn[1] = bounds[2];
+  xIn[2] = bounds[4];
   t->InternalTransformPoint(xIn,pts+3);
 
-  xIn[0] = bounds[1]; xIn[1]= bounds[3]; xIn[2] = bounds[4];
+  xIn[0] = bounds[1];
+  xIn[1] = bounds[3];
+  xIn[2] = bounds[4];
   t->InternalTransformPoint(xIn,pts+6);
 
-  xIn[0] = bounds[0]; xIn[1]= bounds[3]; xIn[2] = bounds[4];
+  xIn[0] = bounds[0];
+  xIn[1] = bounds[3];
+  xIn[2] = bounds[4];
   t->InternalTransformPoint(xIn,pts+9);
 
-  xIn[0] = bounds[0]; xIn[1]= bounds[2]; xIn[2] = bounds[5];
+  xIn[0] = bounds[0];
+  xIn[1] = bounds[2];
+  xIn[2] = bounds[5];
   t->InternalTransformPoint(xIn,pts+12);
 
-  xIn[0] = bounds[1]; xIn[1]= bounds[2]; xIn[2] = bounds[5];
+  xIn[0] = bounds[1];
+  xIn[1] = bounds[2];
+  xIn[2] = bounds[5];
   t->InternalTransformPoint(xIn,pts+15);
 
-  xIn[0] = bounds[1]; xIn[1]= bounds[3]; xIn[2] = bounds[5];
+  xIn[0] = bounds[1];
+  xIn[1] = bounds[3];
+  xIn[2] = bounds[5];
   t->InternalTransformPoint(xIn,pts+18);
 
-  xIn[0] = bounds[0]; xIn[1]= bounds[3]; xIn[2] = bounds[5];
+  xIn[0] = bounds[0];
+  xIn[1] = bounds[3];
+  xIn[2] = bounds[5];
   t->InternalTransformPoint(xIn,pts+21);
 
   this->PositionHandles();
+}
+
+void vtkBoxWidget::SetUserTransform(vtkTransform* t)
+{
+  if (!t)
+    {
+    vtkErrorMacro(<<"vtkTransform t must be non-NULL");
+    return;
+    }
+
+  this->UserTransform = t;
 }
 
 void vtkBoxWidget::GetPolyData(vtkPolyData *pd)

@@ -206,6 +206,9 @@ public:
   vtkGetMacro(RotationEnabled,int);
   vtkBooleanMacro(RotationEnabled,int);
 
+  // Berend Klein Haneveld
+  void SetUserTransform(vtkTransform* transform);
+
 protected:
   vtkBoxWidget();
   ~vtkBoxWidget();
@@ -317,6 +320,9 @@ protected:
   int TranslationEnabled;
   int ScalingEnabled;
   int RotationEnabled;
+
+  // Berend Klein Haneveld
+  vtkTransform* UserTransform;
 
 private:
   vtkBoxWidget(const vtkBoxWidget&);  //Not implemented
