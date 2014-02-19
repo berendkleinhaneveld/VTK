@@ -3075,3 +3075,7 @@ void vtkImagePlaneWidget::SetUserTransform(vtkTransform* transform) {
   this->CursorActor->SetUserTransform(transform);
   this->MarginActor->SetUserTransform(transform);
 }
+
+vtkActor* vtkImagePlaneWidget::GetActor() {
+  return this->TexturePlaneActor;
+}

@@ -446,6 +446,7 @@ public:
 
   // Berend Klein Haneveld:
   void SetUserTransform(vtkTransform* transform);
+  vtkActor* GetActor();
 
 protected:
   vtkImagePlaneWidget();
