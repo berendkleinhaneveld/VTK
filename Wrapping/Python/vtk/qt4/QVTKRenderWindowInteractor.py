@@ -140,19 +140,19 @@ class QVTKRenderWindowInteractor(QtGui.QWidget):
 
         stereo = 0
 
-        if kw.has_key('stereo'):
+        if 'stereo' in kw:
             if kw['stereo']:
                 stereo = 1
 
         rw = None
 
-        if kw.has_key('rw'):
+        if 'rw' in kw:
             rw = kw['rw']
 
         # create qt-level widget
-        QtGui.QWidget.__init__(self, parent, wflags|QtCore.Qt.MSWindowsOwnDC)
+        QtGui.QWidget.__init__(self, parent, wflags | QtCore.Qt.MSWindowsOwnDC)
 
-        if rw: # user-supplied render window
+        if rw:  # user-supplied render window
             self._RenderWindow = rw
         else:
             self._RenderWindow = vtk.vtkRenderWindow()
@@ -162,18 +162,18 @@ class QVTKRenderWindowInteractor(QtGui.QWidget):
         if type(WId).__name__ == 'PyCObject':
             from ctypes import pythonapi, c_void_p, py_object
 
-            pythonapi.PyCObject_AsVoidPtr.restype  = c_void_p
+            pythonapi.PyCObject_AsVoidPtr.restype = c_void_p
             pythonapi.PyCObject_AsVoidPtr.argtypes = [py_object]
 
             WId = pythonapi.PyCObject_AsVoidPtr(WId)
 
         self._RenderWindow.SetWindowInfo(str(int(WId)))
 
-        if stereo: # stereo mode
+        if stereo:  # stereo mode
             self._RenderWindow.StereoCapableWindowOn()
             self._RenderWindow.SetStereoTypeToCrystalEyes()
 
-        if kw.has_key('iren'):
+        if 'iren' in kw:
             self._Iren = kw['iren']
         else:
             self._Iren = vtk.vtkGenericRenderWindowInteractor()
@@ -182,7 +182,7 @@ class QVTKRenderWindowInteractor(QtGui.QWidget):
         # do all the necessary qt setup
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)
         self.setAttribute(QtCore.Qt.WA_PaintOnScreen)
-        self.setMouseTracking(True) # get all mouse events
+        self.setMouseTracking(True)  # get all mouse events
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
