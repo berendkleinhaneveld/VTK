@@ -333,6 +333,11 @@ void shadeDVR(int volumeNr, vec4 value, float opacity, inout vec4 destColor, ino
 		} else {
 			color = shade2(value);
 		}
+
+		// // Pseudo-code
+		// ray.rgb = ray.rgb + voxel.rgb * voxel.a * (1.0 - ray.a)
+		// ray.a   = (1.0 - ray.a) * (1.0 - voxel.a)
+
 		float remainOpacity = 1.0 - currentOpacity;
 		color = color * opacity;
 		destColor = destColor + color * remainOpacity;
