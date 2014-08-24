@@ -36,7 +36,6 @@
 #include "vtkVectorText.h"
 #include "vtkTransform.h"
 #include "vtkFollower.h"
-#include <stdlib.h>
 
 vtkCxxSetObjectMacro(vtkAbstractPolygonalHandleRepresentation3D,Property,vtkProperty);
 vtkCxxSetObjectMacro(vtkAbstractPolygonalHandleRepresentation3D,SelectedProperty,vtkProperty);
@@ -553,7 +552,7 @@ void VectorScalarMultiply(const double* vec1, const double scalar, double* out, 
 
 void VectorProject(const double* vec1, const double* normal, double* out, int length)
 {
-  double *aDotNTimesN = (double*)std::calloc(length, sizeof(double));
+  double *aDotNTimesN = (double*)calloc(length, sizeof(double));
   double aDotN = vtkMath::Dot(vec1, normal);
   VectorScalarMultiply(normal, aDotN, aDotNTimesN, length);
   VectorMin(vec1, aDotNTimesN, out, length);
