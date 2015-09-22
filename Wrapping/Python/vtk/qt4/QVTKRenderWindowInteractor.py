@@ -32,10 +32,10 @@ Changes by Rodrigo Mologni, Sep. 2013 (Credit to Daniele Esposti)
 
 
 try:
-    from PyQt4 import QtCore, QtGui
+    from PySide import QtCore, QtGui
 except ImportError:
     try:
-        from PySide import QtCore, QtGui
+        from PyQt4 import QtCore, QtGui
     except ImportError:
         raise ImportError("Cannot load either PyQt or PySide")
 
