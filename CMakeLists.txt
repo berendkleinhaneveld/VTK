@@ -20,7 +20,8 @@ IF(APPLE)
   # Being a library, VTK may be linked in either GC (garbage collected)
   # processes or non-GC processes.  Default to "GC supported" so that both
   # GC and MRR (manual reference counting) are supported.
-  SET(VTK_OBJCXX_FLAGS_DEFAULT "-fobjc-gc")
+  # NOTE: clang does not support -fobjc-gc anymore
+  # SET(VTK_OBJCXX_FLAGS_DEFAULT "-fobjc-gc")
   SET(VTK_REQUIRED_OBJCXX_FLAGS ${VTK_OBJCXX_FLAGS_DEFAULT} CACHE STRING "Extra flags for Objective-C++ compilation")
   MARK_AS_ADVANCED(VTK_REQUIRED_OBJCXX_FLAGS)
 ENDIF(APPLE)
